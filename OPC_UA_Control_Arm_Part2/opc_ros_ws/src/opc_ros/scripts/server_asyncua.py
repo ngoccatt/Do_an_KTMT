@@ -20,7 +20,7 @@ from sensor_msgs.msg import Image
 import rospy
 from std_srvs.srv import Empty, Trigger
 from std_srvs.srv import SetBool, SetBoolResponse, SetBoolRequest
-from std_msgs.msg import Bool, UInt16, String
+from std_msgs.msg import Bool, UInt16, Int32, String
 from opc_ros.msg import SetServo, JetMax, SetJetMax
 from opc_ros.srv import SetTarget, SetTargetResponse, SetTargetRequest
 from opc_ros.srv import SetTarget_object, SetTarget_objectResponse, SetTarget_objectRequest
@@ -111,7 +111,8 @@ JetMaxControlList = list()
 AI_SERVICE_NAME = ["palletizing",
                    "waste_classification",
                    "object_tracking",
-                   "color_sorting"
+                   "color_sorting",
+                   "fruits_classification"
                    ]
 AI_COLOR = ["red", "green", "blue"]
 
@@ -497,6 +498,7 @@ async def main():
     rotatorServoNode = await add_on_folder.add_variable(idx, "rotator", 90, varianttype=ua.VariantType.Double)
     gripperServoNode = await add_on_folder.add_variable(idx, "gripper", 90, varianttype=ua.VariantType.Double)
     suckNode = await add_on_folder.add_variable(idx, "suckcup", False)
+    sliderNode = await add_on_folder.add_variable(idx, "slider", "")
 
     cordinateFolder = await rootFolder.add_folder(idx, "Cordinate")
     xNode = await cordinateFolder.add_variable(idx, "x", 0.0, varianttype=ua.VariantType.Double)
@@ -626,7 +628,7 @@ async def main():
     # -----------------------------------------------------------------------------------------------------------------------------------#
 
     inargx = create_Ua_Argument(Name="AI Service Name", Datatype=ua.NodeId(ua.ObjectIds.String),
-                                Description="AI service name available: palletizing,\ncolor_sorting\nobject_tracking\nwaste_classification\n ...")
+                                Description="AI service name available: palletizing,\ncolor_sorting\nobject_tracking\nwaste_classification\nfruits_classification\n ...")
     inargy = create_Ua_Argument(Name="Enter service", Datatype=ua.NodeId(ua.ObjectIds.Boolean),
                                 Description="Enter or Quit service")
 
@@ -639,7 +641,7 @@ async def main():
                                                         [outarg])
 
     inargx = create_Ua_Argument(Name="AI Service Name", Datatype=ua.NodeId(ua.ObjectIds.String),
-                                Description="AI service name available: palletizing,\ncolor_sorting\nobject_tracking\nwaste_classification\n ...")
+                                Description="AI service name available: palletizing,\ncolor_sorting\nobject_tracking\nwaste_classification\nfruits_classification\n ...")
     inargy = create_Ua_Argument(Name="Start service", Datatype=ua.NodeId(ua.ObjectIds.Boolean),
                                 Description="Start or Stop service. Service must be Enter before use")
 
@@ -873,6 +875,9 @@ async def main():
 
     async def updateAIWasteState(data):
         await AIWasteStateCurrentNode.write_value(data.data)
+        
+    async def updateSlider(data):
+        await sliderNode.write_value(data.data)
 
     async def ros_run():
         global actionlibClient
@@ -895,6 +900,8 @@ async def main():
                          callback=lambda msg: taskPool.append(asyncioLoop.create_task(updateAIWasteState(msg))))
         rospy.Subscriber('/waste_classification/set_waste_class', String, 
                          callback=lambda msg: taskPool.append(asyncioLoop.create_task(updateAIWasteType(msg))))
+        rospy.Subscriber('/jetmax/slider', String, 
+                         callback=lambda msg: taskPool.append(asyncioLoop.create_task(updateSlider(msg))))
         
         rospy.Subscriber(imageTopic2, Image, imageCallback2)
 
