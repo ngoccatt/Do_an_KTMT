@@ -1,0 +1,46 @@
+joint 6
+0 -> 5
+
+Tu arduino se gui len thong tin joit truoc va sau khi chuyen dong:
+<{thoong tin join prev}{thoong tin joint last}>
+
+Thong tin joint bao gom 6 so la goc cach nhau boi ":"
+joint1:joint2:joint3 etc..
+
+Ex:
+<{30:20:40:unknow1:unknow2:unknow3}{40:10:70:-90:180:90}> 
+x, y, z, -90:180:90 
+
+
+Arduino duoi canh tay chi nhan lenh khi da gui ACK. 
+ACK
+
+Manual: 
+For mat gui:
+!xxxxxx# 6 so lien tuc
+0 1 2: dung, di phai, di trai
+EX: 111111
+
+Cac lenh khac
+!gohome#  
+!gofold#
+!manual# // debug
+!goauto#
+!Initon# -> sau khi initon mac dinh la che do manual
+
+
+
+sendCommand(string: command, time: wait, pub: yes/no)
+{
+ while( counter < wait) 
+{
+
+
+roscore
+
+rosrun gamepad game_pad_mqtt.py
+rosrun auto_mode cam_processing.py
+rosrun amqtt_sub_vr rtsp_stream.py
+
+source env/bin/activate
+rosrun opc_ros server_asyncua_jetarm.py
